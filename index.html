@@ -7,6 +7,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="https://glitch.com/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/animate.css@4.0.0/animate.min.css"
+    />
   </head>
   <body>
     <div class="container">
@@ -19,14 +23,19 @@
       </div>
 
       <form id="checkPerson" class="section">
-        <div class="field">
+        <div class="field has-addons">
+          <div class="control">
+            <a class="button is-static">
+      Day
+    </a>
+          </div>
           <div class="control">
             <input
               type="number"
               id="day"
               min="1"
               max="3"
-              placeholder="Day"
+              placeholder="1–3"
               class="input dayInput"
             />
           </div>
@@ -43,7 +52,7 @@
             />
           </div>
         </div>
-        <input type="submit" value="Submit" />
+        <input type="submit" id="submit" value="Submit" class="button" />
       </form>
     </div>
     <div class="modal" id="result-modal">
