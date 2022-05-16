@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- This is the main template for the site, with index.jsx building the content and behavior -->
+
+    <title>Hello React!</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="https://glitch.com/favicon.ico" />
+  </head>
+  <body>
+    <div class="container">
+      <div style="display: none">
+        <div class="scan-container">
+          <video></video>
+        </div>
+
+        <button id="startScan" class="button">Start Scan</button>
+      </div>
+
+      <form id="checkPerson" class="section">
+        <div class="field">
+          <div class="control">
+            <input
+              type="number"
+              id="day"
+              min="1"
+              max="3"
+              placeholder="Day"
+              class="input dayInput"
+            />
+          </div>
+        </div>
+        <div class="field">
+          <div class="control">
+            <input
+              id="personName"
+              type="text"
+              class="input"
+              placeholder="Manually type a name"
+              list="persons"
+              required
+            />
+          </div>
+        </div>
+        <input type="submit" value="Submit" />
+      </form>
+    </div>
+    <div class="modal" id="result-modal">
+      <div class="modal-background"></div>
+      <div class="modal-content">
+        <div class="box" id="result">Result</div>
+      </div>
+      <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
