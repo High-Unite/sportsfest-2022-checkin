@@ -3,7 +3,7 @@
   <head>
     <!-- This is the main template for the site, with index.jsx building the content and behavior -->
 
-    <title>Hello React!</title>
+    <title>Czech Inn</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="https://glitch.com/favicon.ico" />
@@ -14,46 +14,57 @@
   </head>
   <body>
     <div class="container">
-      <div style="display: none">
-        <div class="scan-container">
-          <video></video>
-        </div>
+      <div class="section">
+        <details>
+          <summary>Scanner</summary>
+          <div>
+            <div class="scan-container">
+              <video></video>
+              <div class="scan-flash"></div>
+            </div>
 
-        <button id="startScan" class="button">Start Scan</button>
+            <button id="startScan" class="button">Start Scan</button>
+            <button id="stopScan" class="button">Stop Scan</button>
+          </div>
+        </details>
       </div>
+      <section class="section">
+        <h1 class="title is-1">Sportsfest 2022 Check In</h1>
 
-      <form id="checkPerson" class="section">
-        <div class="field has-addons">
-          <div class="control">
-            <a class="button is-static">
-      Day
-    </a>
+        <form id="checkPerson" class="block">
+          <div class="field has-addons">
+            <div class="control">
+              <a class="button is-static"> Day </a>
+            </div>
+            <div class="control">
+              <input
+                type="number"
+                id="day"
+                min="1"
+                max="3"
+                placeholder="1–3"
+                class="input dayInput"
+                required
+              />
+            </div>
           </div>
-          <div class="control">
-            <input
-              type="number"
-              id="day"
-              min="1"
-              max="3"
-              placeholder="1–3"
-              class="input dayInput"
-            />
+          <div class="field">
+            <div class="control">
+              <input
+                id="personName"
+                type="text"
+                class="input"
+                placeholder="Manually type a name"
+                list="persons"
+                required
+              />
+            </div>
           </div>
-        </div>
-        <div class="field">
-          <div class="control">
-            <input
-              id="personName"
-              type="text"
-              class="input"
-              placeholder="Manually type a name"
-              list="persons"
-              required
-            />
-          </div>
-        </div>
-        <input type="submit" id="submit" value="Submit" class="button" />
-      </form>
+          <input type="submit" id="submit" value="Submit" class="button" />
+        </form>
+
+        <ul id="loadingPeople" class="block"></ul>
+      </section>
     </div>
     <div class="modal" id="result-modal">
       <div class="modal-background"></div>
