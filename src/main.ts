@@ -1,15 +1,15 @@
-// import QrScanner from "qr-scanner";
+import QrScanner from "qr-scanner";
 import "./styles/styles.css";
-import { setDefaults, toast } from 'bulma-toast'
+import { setDefaults, toast } from "bulma-toast";
 
 setDefaults({
   duration: 2000,
-  position: 'top-right',
+  position: "top-right",
   dismissible: true,
-  animate: { in: 'fadeIn', out: 'fadeOut' }
-})
-// const videoElem = document.querySelector("video");
-// let searching = false;
+  animate: { in: "fadeIn", out: "fadeOut" },
+});
+const videoElem = document.querySelector("video");
+let searching = false;
 
 async function fetchPeople(method: "GET" | "POST" | string, data?: any) {
   const help = await fetch(
@@ -23,46 +23,136 @@ async function fetchPeople(method: "GET" | "POST" | string, data?: any) {
   return await help.json();
 }
 
-// const qrScanner = new QrScanner(
-//   videoElem,
-//   ({ data }) => {
-//     if (searching) return;
-//     const d = JSON.parse(data);
-//     qrScanner.stop();
-//     searching = true;
-//     fetchPeople("POST", d)
-//       .then((res) => {
-//         document.getElementById("result-modal").classList.add("is-active");
-//         document.getElementById("result").innerHTML = res.ok
-//           ? "Processed registration for " + data
-//           : "An error occurred: " + JSON.stringify(res.message);
-//         if (res.error) console.error(res);
-//       })
-//       .catch((err) => {
-//         document.getElementById("result-modal").classList.add("is-active");
-//         document.getElementById("result").innerHTML = JSON.stringify(err);
-//         console.error(err);
-//       })
-//       .finally(() => (searching = false));
-//   },
-//   {
-//     highlightScanRegion: true,
-//     highlightCodeOutline: true,
-//   }
-// );
-// document.getElementById("startScan").onclick = () => {
-//   qrScanner.start();
-// };
+let flashAnimation;
 
-Array.from(
-  document.querySelectorAll(".modal-close, .modal-background")
-).forEach(
-  ($el) =>
-    ($el.onclick = (e) => {
-      e.target.parentElement.classList.remove("is-active");
-      // qrScanner.start();
+function startSearch() {
+  // searching = true;
+  // videoElem.pause();
+  // document
+  //   .querySelector(".scan-region-highlight-svg")
+  //   .getAnimations()[0]
+  //   .pause();
+  if (!flashAnimation) {
+flashAnimation    = document.querySelector(".scan-container .scan-flash").animate([{
+    opacity: 0
+  }, {
+    opacity: 1
+  }, {
+    opacity: 0
+  }], {
+    duration: 200,
+    iterations: 1,
+  fill: "backwards"
+  });
+
+  } else {
+    flashAnimation.play();
+  }
+}
+
+function stopSearch() {
+  videoElem.play();
+  document
+    .querySelector(".scan-region-highlight-svg")
+    .getAnimations()[0]
+    .play();
+  document
+    .querySelector(".scan-region-highlight-svg")
+    .classList.remove("found");
+  // searching = false;
+}
+
+let scans = {};
+let submits = {};
+
+function fetchPretty(data: any) {
+  return fetchPeople("POST", data)
+    .then((res: { ok: boolean }) => {
+      if (res.error) {
+        switch (res.code) {
+          case 1:
+            toast({
+              message: res.message,
+              duration: 4000,
+              type: "is-warning",
+            });
+            break;
+          default:
+            toast({
+              message: "An error occurred: " + JSON.stringify(res.message),
+              type: "is-danger",
+            });
+        }
+        return;
+      }
+      toast({
+        message: res.message,
+        type: res.ok ? "is-success" : "is-danger",
+      });
     })
+    .catch((err) => {
+      toast({
+        message: JSON.stringify(err),
+        type: "is-danger",
+      });
+      console.error(err);
+    });
+}
+
+const qrScanner = new QrScanner(
+  videoElem,
+  ({ data }) => {
+    const c = scans[data];
+    scans[data] = setTimeout(() => delete scans[data], 3000);
+    if (c) return clearTimeout(c);
+    const n = parseInt(data, 32);
+    const hash = n >> 2,
+      day = n & 3;
+    if (typeof n !== "number") return;
+    // qrScanner.stop();
+    startSearch();
+    fetchPretty({ hash, day })//.finally(stopSearch);
+  },
+  {
+    highlightScanRegion: true,
+    highlightCodeOutline: true,
+    maxScansPerSecond: 5,
+  }
 );
+document.getElementById("startScan").onclick = () => {
+  qrScanner.start();
+};
+document.getElementById("stopScan").onclick = () => {
+  qrScanner.stop();
+};
+
+let fetchingPeople = [];
+
+function updateQueue() {
+  const $loadingPeople = document.getElementById("loadingPeople")
+  let newIndices = [];
+  for (let i = 0; i < fetchingPeople.length; i++) {
+    const name = fetchingPeople[i]
+    if (!$loadingPeople.querySelector(`li[key="${name}"]`)) {
+      const newEl = document.createElement("li");
+      newEl.setAttribute("class", "notification")
+      newEl.setAttribute("key", name);
+      newEl.innerHTML = "Loading: " + name;
+      console.log(newEl);
+      if (i === 0) $loadingPeople.appendChild(newEl);
+      else $loadingPeople.querySelector(`li:nth-child(${i})`).after(newEl);
+      newEl.animate([{opacity: 0}, {opacity: 1}], {fill: "forwards", duration: 500});
+    }
+  }
+  for (let $li of document.getElementById("loadingPeople").querySelectorAll("li")) {
+    if (!fetchingPeople.includes($li.getAttribute("key"))) {
+      const a = $li.animate([{opacity: 1}, {opacity: 0}], {duration: 500})
+      a.addEventListener('finish', () => {
+        $li.parentElement.removeChild($li)
+      })
+    }
+  }
+}
 
 // auto-complete thing
 fetchPeople("GET").then((people) => {
@@ -87,51 +177,40 @@ fetchPeople("GET").then((people) => {
     const check = people.indexOf(personName.value) > -1;
     if (!check) {
       // alert("Invalid or incomplete name");
-      personName.value = "";
+      // personName.value = "";
     } else {
       const data = {
         day: +document.querySelector("input.dayInput").value,
         name: personName.value,
       };
-      console.log(data);
-      personName.parentElement.classList.add("is-loading");
-      personName.disabled = true;
-      document.getElementById("submit").disabled = true;
-      fetchPeople("POST", data)
-        .then((res: { ok: boolean }) => {
-          if (res.error) {
-            switch (res.code) {
-              case 1:
-                toast({
-            message: res.message,
-                  duration: 4000,
-            type: 'is-warning',            
-          })
-                break;
-              default: 
-                toast({
-            message: "An error occurred: " + JSON.stringify(res.message),
-            type: 'is-danger',            
-          })
-            }
-            return;
-          }
-          toast({
-            message: res.ok
-            ? `Processed registration of Day ${data.day} for ${data.name}`
-            : "An error occurred: " + JSON.stringify(res.message),
-            type: res.ok ? 'is-success' : 'is-danger',            
-          })
+      const key = data.name;
+      const c = submits[key];
+      submits[key] = setTimeout(() => delete submits[key], 3000);
+      if (c) {
+        toast({message: `${data.name} has already been checked in`})
+        return clearTimeout(c);
+      }
+        
+      if (!fetchingPeople) {
+        personName.parentElement.classList.add("is-loading");
+      }
+      fetchingPeople.push(key);
+      updateQueue();
+      personName.value = ""
+      // personName.disabled = true;
+      // document.getElementById("submit").disabled = true;
+      fetchPretty(data).then(
+        () => {
           
-        })
-        .catch((err) => {
-          toast({
-            message: JSON.stringify(err),
-            type: 'is-danger',
-          })
-          console.error(err);
-        })
-        .finally(() => (personName.value = "", personName.disabled=false, document.getElementById("submit").disabled = false, personName.parentElement.classList.remove("is-loading")));
+          // personName.disabled = false
+          // document.getElementById("submit").disabled = false
+          fetchingPeople.shift();
+          updateQueue();
+          if (fetchingPeople.length === 0) {
+            personName.parentElement.classList.remove("is-loading")
+          }
+        }
+      );
     }
   });
 
